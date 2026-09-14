@@ -21,6 +21,78 @@ html, body {
     font-family: Georgia, "Times New Roman", serif;
 }
 
+
+/* =========================
+   START SCREEN
+========================= */
+
+.start-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #101b42 0%,
+            #050b20 45%,
+            #01030c 100%
+        );
+
+    transition:
+        opacity 1.2s ease,
+        visibility 1.2s ease;
+}
+
+.start-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.start-button {
+    padding: 16px 30px;
+
+    border: 2px solid #e7bd61;
+    border-radius: 40px;
+
+    background: rgba(243,223,170,.08);
+
+    color: #f8e9bb;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    letter-spacing: 1.5px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 0 18px rgba(231,189,97,.2);
+
+    transition:
+        transform .25s ease,
+        background .25s ease,
+        box-shadow .25s ease;
+}
+
+.start-button:hover {
+    transform: scale(1.04);
+
+    background: rgba(243,223,170,.14);
+
+    box-shadow:
+        0 0 25px rgba(231,189,97,.35);
+}
+
+
+/* =========================
+   SCENE
+========================= */
+
 .scene {
     position: relative;
     width: 100vw;
@@ -42,7 +114,15 @@ html, body {
             #030713 100%
         );
 
-    animation: roomReveal 2.5s ease-out 3.7s forwards;
+    animation:
+        roomReveal 2.5s ease-out 3.7s forwards;
+}
+
+
+/* Freeze all animations until the user starts */
+
+.scene.waiting * {
+    animation-play-state: paused !important;
 }
 
 
@@ -187,7 +267,6 @@ html, body {
 
 /* =========================
    CAKE
-   DO NOT CHANGE SHAPE
 ========================= */
 
 .cake {
@@ -331,9 +410,6 @@ html, body {
     opacity: .9;
 }
 
-
-/* Chocolate drizzle */
-
 .chocolate-drizzle {
     position: absolute;
     z-index: 3;
@@ -361,9 +437,6 @@ html, body {
 
     transform: rotate(var(--rot));
 }
-
-
-/* Small cream dollops */
 
 .cream-dots {
     position: absolute;
@@ -400,9 +473,6 @@ html, body {
         0 2px 0 rgba(80,35,25,.2);
 }
 
-
-/* Red decorative berries / cherries */
-
 .cake-berries {
     position: absolute;
     z-index: 6;
@@ -437,9 +507,6 @@ html, body {
     box-shadow:
         0 0 7px rgba(224,55,75,.35);
 }
-
-
-/* Gold sprinkles */
 
 .gold-sprinkles {
     position: absolute;
@@ -1404,7 +1471,25 @@ html, body {
 
 <body>
 
-<div class="scene">
+
+<!-- =========================
+     START SCREEN
+========================= -->
+
+<div class="start-screen" id="startScreen">
+
+    <button class="start-button" id="startButton">
+        Tap to begin ✨
+    </button>
+
+</div>
+
+
+<!-- =========================
+     MAIN SCENE
+========================= -->
+
+<div class="scene waiting" id="scene">
 
     <!-- INTRO -->
     <div class="intro">
@@ -1535,6 +1620,7 @@ html, body {
 
         </div>
 
+
         <!-- Cake stripe -->
         <div class="cake-decoration"></div>
 
@@ -1633,11 +1719,138 @@ html, body {
 
 
 <script>
-/*
-    No JavaScript is required for the animation.
-    Everything is handled with CSS so this can be
-    uploaded directly to GitHub Pages.
-*/
+
+/* =========================
+   REAL AUDIO FILES
+========================= */
+
+const sounds = {
+    bulb: new Audio("bulb.mp3"),
+    reveal: new Audio("reveal.mp3"),
+    surprise: new Audio("surprise.mp3"),
+    candle: new Audio("candle.mp3"),
+    blow: new Audio("blow.mp3"),
+    applause: new Audio("applause.mp3")
+};
+
+
+/* Preload everything */
+
+Object.values(sounds).forEach(sound => {
+    sound.preload = "auto";
+});
+
+
+/* Keep sounds subtle */
+
+sounds.bulb.volume = 0.75;
+sounds.reveal.volume = 0.65;
+sounds.surprise.volume = 0.8;
+sounds.candle.volume = 0.65;
+sounds.blow.volume = 0.75;
+sounds.applause.volume = 0.65;
+
+
+/* =========================
+   PLAY SOUND FUNCTION
+========================= */
+
+function playSound(sound) {
+
+    sound.currentTime = 0;
+
+    sound.play().catch(() => {
+        console.log("Audio could not play:", sound.src);
+    });
+}
+
+
+/* =========================
+   START
+========================= */
+
+const startButton = document.getElementById("startButton");
+const startScreen = document.getElementById("startScreen");
+const scene = document.getElementById("scene");
+
+let started = false;
+
+startButton.addEventListener("click", () => {
+
+    if (started) return;
+
+    started = true;
+
+    /*
+        Remove the waiting state.
+        This starts all CSS animations from
+        their original timeline.
+    */
+
+    scene.classList.remove("waiting");
+
+    startScreen.classList.add("hidden");
+
+
+    /* =========================
+       AUDIO TIMELINE
+    ========================= */
+
+    /*
+        The sounds are synchronized with
+        the existing CSS animation timings.
+    */
+
+
+    // Bulb falls
+    setTimeout(() => {
+        playSound(sounds.bulb);
+    }, 5950);
+
+
+    // Room begins glowing
+    setTimeout(() => {
+        playSound(sounds.reveal);
+    }, 6150);
+
+
+    // SURPRISE
+    setTimeout(() => {
+        playSound(sounds.surprise);
+    }, 11000);
+
+
+    // First candle lights — 1
+    setTimeout(() => {
+        playSound(sounds.candle);
+    }, 15800);
+
+
+    // Second candle lights — 9
+    setTimeout(() => {
+        playSound(sounds.candle);
+    }, 16050);
+
+
+    // 9 blows out first
+    setTimeout(() => {
+        playSound(sounds.blow);
+    }, 21800);
+
+
+    // 1 blows out second
+    setTimeout(() => {
+        playSound(sounds.blow);
+    }, 22100);
+
+
+    // Small applause after both candles are out
+    setTimeout(() => {
+        playSound(sounds.applause);
+    }, 22380);
+
+});
+
 </script>
 
 </body>
